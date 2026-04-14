@@ -107,6 +107,41 @@ def validate_skill(skill_path):
         if len(description) < 50:
             warnings.append(f"Description 较短（{len(description)} 字符），可能触发覆盖不足")
 
+    # SKILL.md body quality checks
+    body = content[match.end():].strip()
+
+    body_lines = len(body.splitlines())
+    if body_lines > 500:
+        warnings.append(f"SKILL.md 正文 {body_lines} 行，超过建议的 500 行上限，可能影响 Agent 注意力分配")
+
+    has_examples = ("✅" in body and "❌" in body) or ("示例" in body and "```" in body)
+    if not has_examples:
+        warnings.append("SKILL.md 缺少具体示例（建议用 ✅/❌ 对比或 before/after 示例）")
+
+    error_patterns = [r"如果.*失败", r"如果.*错误", r"if.*fail", r"fallback"]
+    has_error_recovery = any(re.search(p, body, re.IGNORECASE) for p in error_patterns)
+    if not has_error_recovery:
+        warnings.append("SKILL.md 缺少错误恢复路径（建议写明「如果 X 失败，做 Y」）")
+
+    verify_keywords = ["检查", "自检", "校验", "checklist", "verify"]
+    if not any(kw in body.lower() for kw in verify_keywords):
+        warnings.append("SKILL.md 缺少输出校验步骤（建议在末尾加自检清单）")
+
+    first_20_lines = "\n".join(body.splitlines()[:20])
+    boundary_keywords = ["不处理", "不适用", "不覆盖", "not for", "does not handle", "不需要此"]
+    if not any(kw in first_20_lines.lower() for kw in boundary_keywords):
+        warnings.append("SKILL.md 开头缺少触发边界说明（建议用 2-3 行声明「本 Skill 不处理的场景」）")
+
+    refs_dir = skill_path / "references"
+    if refs_dir.is_dir():
+        for f in refs_dir.rglob("*.md"):
+            line_count = len(f.read_text().splitlines())
+            if line_count > 500:
+                warnings.append(
+                    f"references/{f.relative_to(refs_dir)} 超过 500 行"
+                    f"（{line_count} 行），建议拆分或加目录索引"
+                )
+
     if warnings:
         return True, "Skill is valid! Warnings:\n" + "\n".join(f"  - {w}" for w in warnings)
 
