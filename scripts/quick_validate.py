@@ -91,6 +91,25 @@ def validate_skill(skill_path):
         if len(compatibility) > 500:
             return False, f"Compatibility is too long ({len(compatibility)} characters). Maximum is 500 characters."
 
+    # Content quality checks (warnings, don't fail validation)
+    warnings = []
+
+    if description:
+        has_chinese = any('\u4e00' <= c <= '\u9fff' for c in description)
+        has_english = any(c.isascii() and c.isalpha() for c in description)
+        if not (has_chinese and has_english):
+            warnings.append("Description 建议中英双语，提升跨语言触发率")
+
+        trigger_keywords = ["use when", "trigger", "use this", "当", "使用", "触发"]
+        if not any(kw in description.lower() for kw in trigger_keywords):
+            warnings.append("Description 缺少触发场景描述（建议包含 'Use when...' 或 '当...时使用'）")
+
+        if len(description) < 50:
+            warnings.append(f"Description 较短（{len(description)} 字符），可能触发覆盖不足")
+
+    if warnings:
+        return True, "Skill is valid! Warnings:\n" + "\n".join(f"  - {w}" for w in warnings)
+
     return True, "Skill is valid!"
 
 if __name__ == "__main__":

@@ -1,4 +1,4 @@
-# yuwei-skill-creator
+# my-skill-creator
 
 > 帮你把任何工作流打包成可复用的 AI Agent Skill 的完整工作台。
 
@@ -6,7 +6,7 @@
 
 ## 这是什么
 
-`yuwei-skill-creator` 是一个 AI Agent Skill，安装后当你对 Claude Code（或其他支持 Skill 机制的 Agent）说「我想创建一个 Skill」，它就会自动被激活，引导你完成从零到发布的完整流程：
+`my-skill-creator` 是一个 AI Agent Skill，安装后当你对支持 Skill 机制的 Agent 说「我想创建一个 Skill」，它就会自动被激活，引导你完成从零到发布的完整流程：
 
 - **理解需求** — 通过具体例子弄清楚这个 Skill 要做什么
 - **规划资源** — 识别哪些内容可以复用，应该放进 `scripts/`、`references/` 还是 `assets/`
@@ -19,11 +19,21 @@
 
 ## 安装方法
 
-```bash
-git clone https://github.com/yuwei-x/yuwei-skill-creator ~/.claude/skills/yuwei-skill-creator
-````
+仓库地址：[805795108/my-skill-creator](https://github.com/805795108/my-skill-creator)
 
-克隆完成后重启 Claude Code，即可生效。
+Claude Code 示例：
+
+```bash
+git clone https://github.com/805795108/my-skill-creator ~/.claude/skills/my-skill-creator
+```
+
+Cursor / Codex CLI 示例：
+
+```bash
+git clone https://github.com/805795108/my-skill-creator ~/.codex/skills/my-skill-creator
+```
+
+将仓库放到对应平台的 Skill 目录后，重启当前 Agent/CLI 即可生效。
 
 ---
 
@@ -42,54 +52,55 @@ git clone https://github.com/yuwei-x/yuwei-skill-creator ~/.claude/skills/yuwei-
 ## 目录结构
 
 ```
-yuwei-skill-creator/
+my-skill-creator/
 ├── SKILL.md                      # 主指令文件（触发后加载）
-├── agents/
-│   ├── grader-zh.md              # 评分 Agent：对每条断言判断 pass/fail
-│   ├── comparator-zh.md          # 盲测比较 Agent：不知道哪组是新版的情况下打分
-│   └── analyzer-zh.md            # 分析 Agent：找出胜出原因，输出改进建议
 ├── scripts/
 │   ├── run_eval.py               # 运行触发评估（测试 description 的触发准确率）
 │   ├── improve_description.py    # 调用 Claude 优化 description
 │   ├── run_loop.py               # 自动循环：评估 → 优化 → 再评估
 │   ├── aggregate_benchmark.py    # 聚合多轮测试结果，生成 benchmark.json
 │   ├── generate_report.py        # 生成可视化 HTML 报告
+│   ├── generate_review.py        # 启动评审服务器 / 生成静态 HTML
 │   ├── package_skill.py          # 打包 Skill 为 .skill 文件
 │   ├── quick_validate.py         # 快速校验 SKILL.md 格式是否合规
 │   └── utils.py                  # 公共工具函数
 ├── references/
-│   └── schemas.md                # 所有 JSON 文件的字段定义（evals、grading、benchmark 等）
+│   ├── schemas.md                # 所有 JSON 文件的字段定义（evals、grading、benchmark 等）
+│   ├── eval-workflow.md          # 测试评估详细操作流程（5.2-5.6）
+│   └── agents/
+│       ├── grader.md             # 评分 Agent：对每条断言判断 pass/fail
+│       ├── comparator.md         # 盲测比较 Agent：不知道哪组是新版的情况下打分
+│       └── analyzer.md           # 分析 Agent：找出胜出原因，输出改进建议
 ├── assets/
-│   └── eval_review.html          # 触发测试集可视化审核界面
-└── eval-viewer/
-    ├── generate_review.py        # 启动评审服务器 / 生成静态 HTML
-    └── viewer.html               # 评审界面模板（含 Outputs + Benchmark 两个 Tab）
+│   ├── eval_review.html          # 触发测试集可视化审核界面
+│   └── viewer.html               # 评审界面模板（含 Outputs + Benchmark 两个 Tab）
+└── requirements.txt              # Python 依赖
 ```
 
 ---
 
 ## 运行环境要求
 
-`scripts/` 下的脚本依赖：
-
 ```bash
-pip install anthropic pyyaml
+pip install -r requirements.txt
 ```
 
-`run_eval.py` 和 `run_loop.py` 依赖 `claude` CLI（即 Claude Code）。如使用其他 Agent，需将脚本中的 `claude -p` 替换为对应命令。
+Skill 的目录结构和主文档组织方式不只适用于 Claude Code，支持 Skill 机制的平台都可以复用。
+
+当前自动化脚本里的 LLM 调用默认依赖 `claude` CLI：`run_eval.py`、`run_loop.py`、`improve_description.py` 会通过 `scripts/utils.py` 的 `call_llm()` 统一调用。其他平台如果也想跑这套自动评估/优化脚本，需要在 `scripts/utils.py` 里补充对应适配。
 
 ---
 
-## 其他平台安装路径
+## 常见安装路径
 
 | AI Agent | Skill 目录 |
 |----------|-----------|
 | Claude Code（全局）| `~/.claude/skills/` |
 | Claude Code（项目级）| `<项目根目录>/.claude/skills/` |
-| CodeX | `~/.codex/skills/`（以官方文档为准）|
+| Codex | `~/.codex/skills/`（以官方文档为准）|
 | OpenClaw | `~/.openclaw/skills/`（以官方文档为准）|
 
-核心文件（`SKILL.md`、`scripts/`、`agents/` 等）在所有平台上完全相同，仅安装目录不同。
+核心文件（`SKILL.md`、`scripts/`、`references/`、`assets/` 等）在不同平台可以保持一致，通常只需要调整安装目录和少量平台适配代码。
 
 ---
 
@@ -117,7 +128,8 @@ your-skill-name/
 
 ---
 
-## 作者
+## 仓库
 
-由 [@yuwei-x](https://github.com/yuwei-x) 创建。
+仓库地址：[https://github.com/805795108/my-skill-creator](https://github.com/805795108/my-skill-creator)
+
 如有问题或建议，欢迎提 Issue 或 PR。

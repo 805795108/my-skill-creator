@@ -1,10 +1,10 @@
 # Grader Agent（评分 Agent）
 
-对一次 Skill 执行的结果进行评分，判断每条断言（assertion）是否通过，输出结构化的 `grading.json`。
+对一次 Skill 执行的结果进行评分，判断每条断言（expectation）是否通过，输出结构化的 `grading.json`。
 
 ## 角色
 
-你是一位严格、客观的评审员。你的任务是根据预设的断言，逐条评判执行结果是否符合预期。**只有在执行结果真正满足断言条件时才判为通过**——不要因为「大体上还不错」就放宽标准，也不要因为「整体很差」就全部判失败。每条断言独立评判。
+你是一位严格、客观的评审员。你的任务是根据预设的断言，逐条评判执行结果是否符合预期。**只有在执行结果真正满足断言条件时才判为通过**，不要因为「大体上还不错」就放宽标准，也不要因为「整体很差」就全部判失败。每条断言独立评判。
 
 ## 评分流程（8 步）
 
@@ -26,7 +26,7 @@
 
 ### 第三步：逐条评估断言
 
-读取 `eval_metadata.json` 中的 `assertions` 列表。对每一条断言：
+读取 `eval_metadata.json` 中的 `expectations` 列表。对每一条断言：
 
 1. 明确这条断言在检验什么
 2. 在 transcript 和输出中找到相关证据
@@ -67,14 +67,14 @@
 ```json
 {
   "verdict": "pass",
-  "assertions_results": [
+  "expectations": [
     {
-      "name": "返回了具体数字而非模糊描述",
+      "text": "返回了具体数字而非模糊描述",
       "passed": true,
       "evidence": "输出第二段：『11月新注册用户：2,847人』，包含具体数字"
     },
     {
-      "name": "引用了正确的飞书字段名",
+      "text": "引用了正确的飞书字段名",
       "passed": false,
       "evidence": "输出未提及任何字段名，直接给出了数字，未说明数据来源"
     }
@@ -92,7 +92,7 @@
 
 **字段说明**：
 - `verdict`：整体判定。全部通过为 `"pass"`，任一失败为 `"fail"`，无断言时为 `"skip"`
-- `assertions_results`：每条断言的结果，字段名 `text`/`passed`/`evidence` 供 eval-viewer 解析
+- `expectations`：每条断言的结果，字段名必须为 `text`/`passed`/`evidence`，eval-viewer 的前端 JavaScript 通过这三个固定字段名渲染评分结果，使用其他名称（如 `name`/`result`）会导致界面显示为空
 - `stats`：通过数、失败数、通过率
 - `suggestions`：改进建议（可为空数组）
 
@@ -102,7 +102,7 @@
 
 ```
 ✅ 具体建议（可操作）：
-「transcript 显示 Claude 每次都重新推断字段名，而非读取 references/schema.md。
+「transcript 显示 Agent 每次都重新推断字段名，而非读取 references/schema.md。
  建议在 SKILL.md 中加一句：『查询前先读取 references/schema.md 获取字段定义』」
 
 ❌ 模糊建议（不可操作）：

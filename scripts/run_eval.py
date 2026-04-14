@@ -16,14 +16,14 @@ import uuid
 from concurrent.futures import ProcessPoolExecutor, as_completed
 from pathlib import Path
 
-from scripts.utils import parse_skill_md
+from scripts.utils import detect_platform, parse_skill_md
 
 
 def find_project_root() -> Path:
     """Find the project root by walking up from cwd looking for .claude/.
 
-    Mimics how Claude Code discovers its project root, so the command file
-    we create ends up where claude -p will look for it.
+    The command file we create needs to be in the project's .claude/commands/
+    directory so that claude -p can discover it as an available skill.
     """
     current = Path.cwd()
     for parent in [current, *current.parents]:
@@ -48,6 +48,13 @@ def run_single_query(
     stream events (content_block_start) rather than waiting for the
     full assistant message, which only arrives after tool execution.
     """
+    platform = detect_platform()
+    if platform not in ("claude-code", "generic"):
+        raise NotImplementedError(
+            f"Trigger evaluation requires the claude CLI (claude -p) with "
+            f"stream mode. Platform '{platform}' is not yet supported."
+        )
+
     unique_id = uuid.uuid4().hex[:8]
     clean_name = f"{skill_name}-skill-{unique_id}"
     project_commands_dir = Path(project_root) / ".claude" / "commands"
@@ -77,9 +84,9 @@ def run_single_query(
         if model:
             cmd.extend(["--model", model])
 
-        # Remove CLAUDECODE env var to allow nesting claude -p inside a
-        # Claude Code session. The guard is for interactive terminal conflicts;
-        # programmatic subprocess usage is safe.
+        # Remove CLAUDECODE env var to allow nesting claude -p inside an
+        # active Agent session. The env guard prevents interactive terminal
+        # conflicts; programmatic subprocess usage is safe.
         env = {k: v for k, v in os.environ.items() if k != "CLAUDECODE"}
 
         process = subprocess.Popen(

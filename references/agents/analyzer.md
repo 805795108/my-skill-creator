@@ -11,7 +11,7 @@
 
 ### 触发时机
 
-在 `comparator-zh.md` 完成盲测比较、`comparison.json` 已生成之后使用。此时已知哪组是 `with_skill`、哪组是 `without_skill`（或旧版 Skill）。
+在 `comparator.md` 完成盲测比较、`comparison.json` 已生成之后使用。此时已知哪组是 `with_skill`、哪组是 `without_skill`（或旧版 Skill）。
 
 ### 分析目标
 
@@ -39,7 +39,7 @@
 
 **第三步：从 transcript 中寻找证据**
 
-不要只看最终输出——通读完整 transcript，找到能解释输出质量差异的关键步骤：
+不要只看最终输出，通读完整 transcript，找到能解释输出质量差异的关键步骤：
 
 ```
 ✅ 有价值的证据：
@@ -73,7 +73,7 @@
     {
       "priority": "medium",
       "area": "输出模板",
-      "suggestion": "当前模板只定义了结构，建议补充一个完整的填写示例，让 Claude 有更明确的参照",
+      "suggestion": "当前模板只定义了结构，建议补充一个完整的填写示例，让 Agent 有更明确的参照",
       "evidence": "comparator 评分：内容质量 A=4, B=2；格式差异是主要扣分项"
     }
   ]
@@ -83,7 +83,7 @@
 **字段说明**：
 - `analysis_type`：`"post_hoc"`
 - `winner`：与 comparison.json 中一致
-- `key_differences`：2–4 条最关键的差异点（有具体证据支持）
+- `key_differences`：2-4 条最关键的差异点（有具体证据支持）
 - `improvement_suggestions`：按 priority（high/medium/low）排序，每条含 area（改进方向）、suggestion（具体怎么改）、evidence（证据来源）
 
 ---
@@ -96,7 +96,7 @@
 
 ### 分析目标
 
-从聚合数据中发现**不显眼但重要的模式**——单看一次 eval 容易遗漏的系统性问题。
+从聚合数据中发现**不显眼但重要的模式**，单看一次 eval 容易遗漏的系统性问题。
 
 ### 分析流程
 
@@ -113,7 +113,7 @@
 |------|---------|------|
 | 高方差断言 | 标准差 > 0.3 | Skill 指令不稳定，相同 prompt 有时成功有时失败 |
 | 无区分价值断言 | Δ < 0.1 | 这条断言在有无 Skill 时通过率相近，测试价值低 |
-| token 异常增长 | 有 Skill 比无 Skill 多 50%+ | Skill 可能在引导 Claude 做无效步骤 |
+| token 异常增长 | 有 Skill 比无 Skill 多 50%+ | Skill 可能在引导 Agent 做无效步骤 |
 | 一致性失败 | 某 eval 在所有轮次均失败 | Skill 存在根本性缺陷，不是偶发问题 |
 
 **第三步：输出 Benchmark 分析结果**
@@ -147,7 +147,7 @@
     "assessment": "token 消耗增加 35%，但质量提升 60%，投入产出比合理"
   },
   "consistent_failures": [],
-  "overall_recommendation": "Skill 整体有效，建议优先处理 eval-2 的不稳定性，并删除「输出包含数字」断言"
+  "overall_recommendation": "Skill 整体有效，建议优先处理 eval-2 的不稳定性，并删除『输出包含数字』断言"
 }
 ```
 
